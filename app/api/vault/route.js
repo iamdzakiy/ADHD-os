@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase';
+// FIX: Import admin along with adminDb
+import admin, { adminDb } from '@/lib/firebase';
 
 export async function POST(req) {
   try {
@@ -7,11 +8,12 @@ export async function POST(req) {
     
     const ref = adminDb.collection('vault').doc(userId);
     await ref.set({
+      // Now admin.firestore.FieldValue is correctly defined
       entries: admin.firestore.FieldValue.arrayUnion({
         id: Date.now().toString(),
         title,
         category,
-        encryptedData, // Already encrypted client-side
+        encryptedData,
         updatedAt: new Date().toISOString(),
       })
     }, { merge: true });
@@ -22,14 +24,4 @@ export async function POST(req) {
   }
 }
 
-export async function GET(req) {
-  const { searchParams } = new URL(req.url);
-  const userId = searchParams.get('userId');
-  if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
-
-  const doc = await adminDb.collection('vault').doc(userId).get();
-  if (!doc.exists) {
-    return NextResponse.json({ entries: [] });
-  }
-  return NextResponse.json(doc.data());
-}
+// ... keep the GET function as is

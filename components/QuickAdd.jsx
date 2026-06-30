@@ -30,7 +30,7 @@ export default function QuickAdd() {
 
     try {
       // 1. FINANCE DETECTION
-      const moneyRegex = /(Rp\s*|IDR\s*)?([\d,\.]+)\s*[kK]?/;
+      const moneyRegex = /(Rp\s*|IDR\s*)?([\d,.]+)\s*[kK]?/;
       const match = text.match(moneyRegex);
       if (match || lower.includes('bayar') || lower.includes('beli') || lower.includes('cash')) {
         const amount = parseFloat(text.replace(/[^0-9.]/g, '')) * (text.includes('k') ? 1000 : 1);
