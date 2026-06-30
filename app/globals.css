@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 15, 14, 19;
+  --background-end-rgb: 30, 27, 45;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-start-rgb));
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.25) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.25) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(236, 72, 153, 0.08) 0px, transparent 50%);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.15);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 12px 18px;
+  color: white;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.glass-input:focus {
+  border-color: #8b5cf6;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.glass-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.4);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.6);
+}
+
+/* Animations */
+@keyframes slideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-in {
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
