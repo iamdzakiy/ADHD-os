@@ -5,10 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "firebase:emulate": "firebase emulators:start",
-    "deploy:functions": "firebase deploy --only functions"
+    "start": "next start"
+  },
+  "resolutions": {
+    "undici": "5.28.4"
   },
   "dependencies": {
     "next": "14.0.4",
@@ -28,8 +28,5 @@
     "tailwindcss": "^3.3.6",
     "eslint": "^8.56.0",
     "eslint-config-next": "14.0.4"
-  },
-  "resolutions": {
-  "undici": "5.28.3"
   }
 }
