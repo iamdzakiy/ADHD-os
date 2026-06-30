@@ -4,7 +4,7 @@ import { Sparkles, X, Send, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { addTransaction } from '@/lib/api/finance';
 import { addTask } from '@/lib/api/calendar';
-import { pushDailyLog } from '@/lib/api/capacities';
+import { addNote } from '@/lib/api/notes'; // Ganti pushDailyLog dengan addNote
 
 export default function QuickAdd() {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,7 +29,7 @@ export default function QuickAdd() {
     const lower = text.toLowerCase();
 
     try {
-      // 1. FINANCE DETECTION (Rp, angka, k, bayar, beli)
+      // 1. FINANCE DETECTION
       const moneyRegex = /(Rp\s*|IDR\s*)?([\d,\.]+)\s*[kK]?/;
       const match = text.match(moneyRegex);
       if (match || lower.includes('bayar') || lower.includes('beli') || lower.includes('cash')) {
@@ -44,23 +44,25 @@ export default function QuickAdd() {
         });
         setFeedback('💰 Expense logged!');
       } 
-      // 2. CALENDAR / TASK DETECTION (tomorrow, at, remind, due)
+      // 2. CALENDAR / TASK DETECTION
       else if (lower.includes('tomorrow') || lower.includes('at ') || lower.includes('due') || lower.includes('remind')) {
         await addTask({
           title: text,
           userId: user.uid,
-          dueDate: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+          dueDate: new Date(Date.now() + 86400000).toISOString(),
         });
         setFeedback('📅 Task added! Auto-scheduling triggered.');
       } 
-      // 3. DEFAULT: 2nd Brain / Capacities Note
+      // 3. DEFAULT: Save locally to Firestore "Brain"
       else {
-        await pushDailyLog({
-          content: `📝 Quick Capture: ${text}`,
+        await addNote({
+          title: text.slice(0, 50) + (text.length > 50 ? '...' : ''),
+          content: text,
           userId: user.uid,
+          tags: ['#quick-capture'],
           date: new Date().toISOString().split('T')[0]
         });
-        setFeedback('🧠 Saved to 2nd Brain & Capacities!');
+        setFeedback('🧠 Saved to your 2nd Brain!');
       }
 
       setInput('');
@@ -74,7 +76,6 @@ export default function QuickAdd() {
 
   return (
     <>
-      {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`fixed bottom-8 right-8 z-50 w-16 h-16 rounded-2xl glass-card flex items-center justify-center transition-all duration-500 hover:scale-105 group ${
@@ -84,7 +85,6 @@ export default function QuickAdd() {
         {isOpen ? <X className="text-white w-8 h-8" /> : <Sparkles className="text-white w-8 h-8 group-hover:rotate-12 transition-transform" />}
       </button>
 
-      {/* Modal */}
       {isOpen && (
         <div className="fixed bottom-28 right-8 z-50 w-[90vw] max-w-lg glass-card p-4 animate-slide-in border-purple-500/20">
           <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 focus-within:ring-2 ring-purple-500/50 transition-all">
@@ -106,13 +106,11 @@ export default function QuickAdd() {
               {isLoading ? <Loader2 size={18} className="text-white animate-spin" /> : <Send size={18} className="text-white" />}
             </button>
           </div>
-          
-          {/* Feedback & Tags */}
           <div className="flex justify-between items-center mt-3 px-1">
             <div className="flex gap-2 overflow-x-auto pb-1">
               <span className="text-[10px] text-gray-400 px-3 py-1 rounded-full bg-white/5 whitespace-nowrap">💰 Detects money</span>
               <span className="text-[10px] text-gray-400 px-3 py-1 rounded-full bg-white/5 whitespace-nowrap">📅 Detects dates</span>
-              <span className="text-[10px] text-gray-400 px-3 py-1 rounded-full bg-white/5 whitespace-nowrap">🧠 Saves to Capacities</span>
+              <span className="text-[10px] text-gray-400 px-3 py-1 rounded-full bg-white/5 whitespace-nowrap">🧠 Saves locally</span>
             </div>
             {feedback && (
               <span className={`text-xs ${feedback.includes('Error') ? 'text-red-400' : 'text-green-400'} font-medium`}>
