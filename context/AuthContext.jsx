@@ -1,60 +1,41 @@
-'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  onAuthStateChanged, 
-  signOut 
-} from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
-
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
-
-const AuthContext = createContext({});
+const AuthContext = createContext();
+// GANTI DENGAN EMAIL KAMU. HANYA EMAIL INI YANG BISA AKSES APLIKASI.
+const ALLOWED_EMAIL = "fadzaro10@gmail.com"; 
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        if (firebaseUser.email === ALLOWED_EMAIL) {
+          setUser(firebaseUser);
+          setIsAuthorized(true);
+        } else {
+          // Paksa logout jika email tidak terdaftar
+          await signOut(auth);
+          alert("Akses ditolak. Aplikasi ini dikunci untuk pemilik tertentu.");
+          setIsAuthorized(false);
+        }
+      } else {
+        setUser(null);
+        setIsAuthorized(false);
+      }
       setLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error('Auth error:', error);
-    }
-  };
-
-  const logout = async () => {
-    await signOut(auth);
-  };
-
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, logout }}>
-      {children}
+    <AuthContext.Provider value={{ user, isAuthorized, loading }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
-
 export const useAuth = () => useContext(AuthContext);

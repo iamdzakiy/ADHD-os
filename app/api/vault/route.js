@@ -1,27 +1,33 @@
 import { NextResponse } from 'next/server';
-// FIX: Import admin along with adminDb
-import admin, { adminDb } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase';
+import CryptoJS from 'crypto-js';
 
+// GET: Ambil data (Tetap terenkripsi dari DB)
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get('userId');
+  const snapshot = await adminDb.collection('vaults').doc(userId).collection('items').get();
+  const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return NextResponse.json({ items });
+}
+
+// POST: Simpan data dengan enkripsi
 export async function POST(req) {
   try {
-    const { userId, encryptedData, title, category } = await req.json();
+    const { userId, title, username, password, masterKey } = await req.json();
     
-    const ref = adminDb.collection('vault').doc(userId);
-    await ref.set({
-      // Now admin.firestore.FieldValue is correctly defined
-      entries: admin.firestore.FieldValue.arrayUnion({
-        id: Date.now().toString(),
-        title,
-        category,
-        encryptedData,
-        updatedAt: new Date().toISOString(),
-      })
-    }, { merge: true });
+    // Enkripsi data sensitif menggunakan Master Key
+    const encryptedUser = CryptoJS.AES.encrypt(username, masterKey).toString();
+    const encryptedPass = CryptoJS.AES.encrypt(password, masterKey).toString();
 
+    await adminDb.collection('vaults').doc(userId).collection('items').add({
+      title,
+      username: encryptedUser,
+      password: encryptedPass,
+      createdAt: new Date().toISOString()
+    });
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
-// ... keep the GET function as is
