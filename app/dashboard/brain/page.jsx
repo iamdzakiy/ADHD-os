@@ -1,90 +1,97 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import GlassCard from '@/components/GlassCard';
-import { Brain, Search, Send, Loader2, Link2 } from 'lucide-react';
-import { pushDailyLog } from '@/lib/api/capacities';
+import { Brain, Search, Plus, X } from 'lucide-react';
+import { getNotes, addNote } from '@/lib/api/notes';
 
 export default function BrainPage() {
   const { user } = useAuth();
-  const [note, setNote] = useState('');
-  const [notes, setNotes] = useState([
-    { id: 1, title: 'Project Alpha Ideas', date: '2026-06-29', tags: ['#work', '#creativity'] },
-    { id: 2, title: 'BCA Meeting Notes', date: '2026-06-28', tags: ['#finance', '#bank'] },
-  ]);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showNew, setShowNew] = useState(false);
+  const [newContent, setNewContent] = useState('');
+  const [search, setSearch] = useState('');
 
-  const handlePushToCapacities = async () => {
-    if (!note.trim()) return;
-    setIsSyncing(true);
-    try {
-      await pushDailyLog({
-        content: note,
-        userId: user.uid,
-        date: new Date().toISOString().split('T')[0],
-      });
-      setNotes([{ id: Date.now(), title: note.slice(0, 30) + '...', date: 'Today', tags: ['#brain'] }, ...notes]);
-      setNote('');
-      alert('✅ Synced to Capacities!');
-    } catch (e) {
-      alert('Failed to sync: ' + e.message);
-    } finally {
-      setIsSyncing(false);
-    }
+  useEffect(() => {
+    if (!user) return;
+    getNotes(user.uid).then(data => {
+      setNotes(data);
+      setLoading(false);
+    });
+  }, [user]);
+
+  const handleSaveNote = async () => {
+    if (!newContent.trim() || !user) return;
+    await addNote({
+      title: newContent.slice(0, 40) + (newContent.length > 40 ? '...' : ''),
+      content: newContent,
+      userId: user.uid,
+      tags: ['#brain'],
+    });
+    setNewContent('');
+    setShowNew(false);
+    const updated = await getNotes(user.uid);
+    setNotes(updated);
   };
+
+  const filteredNotes = notes.filter(n => 
+    n.title?.toLowerCase().includes(search.toLowerCase()) ||
+    n.content?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (loading) return <div className="text-gray-400">Loading your brain...</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-white flex items-center gap-3"><Brain /> 2nd Brain</h1>
-        <span className="text-xs text-gray-400 bg-white/5 px-4 py-2 rounded-full border border-white/5">🔗 Linked to Capacities</span>
+        <button onClick={() => setShowNew(true)} className="glass-card px-5 py-2 flex items-center gap-2 text-sm text-white hover:border-purple-500/50">
+          <Plus size={16} /> New Note
+        </button>
       </div>
 
-      {/* Quick Note Input */}
-      <GlassCard>
-        <h2 className="text-white font-semibold mb-3">🧠 Instant Capture</h2>
-        <div className="flex gap-3">
+      {showNew && (
+        <GlassCard className="border-purple-500/20">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-white font-semibold">✍️ New Thought</h2>
+            <button onClick={() => setShowNew(false)} className="text-gray-400 hover:text-white"><X size={18} /></button>
+          </div>
           <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Write your thoughts, meeting notes, or ideas..."
-            className="glass-input min-h-[100px] flex-1"
+            value={newContent}
+            onChange={(e) => setNewContent(e.target.value)}
+            placeholder="Write anything... ideas, notes, reminders..."
+            className="glass-input min-h-[120px]"
+          />
+          <div className="flex justify-end mt-3">
+            <button onClick={handleSaveNote} className="glass-card px-6 py-2 text-white hover:border-green-500/50">
+              Save to Brain
+            </button>
+          </div>
+        </GlassCard>
+      )}
+
+      <GlassCard>
+        <div className="relative mb-4">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <input 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search your brain..." 
+            className="glass-input pl-10" 
           />
         </div>
-        <div className="flex justify-end mt-3 gap-3">
-          <button 
-            onClick={handlePushToCapacities}
-            disabled={isSyncing || !note.trim()}
-            className="glass-card px-6 py-2 flex items-center gap-2 text-sm text-white hover:border-purple-500/50 disabled:opacity-50"
-          >
-            {isSyncing ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-            {isSyncing ? 'Syncing...' : 'Push to Capacities'}
-          </button>
-        </div>
-      </GlassCard>
-
-      {/* Search & Notes List */}
-      <GlassCard>
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-            <input type="text" placeholder="Search your brain..." className="glass-input pl-10" />
-          </div>
-        </div>
         <div className="space-y-2">
-          {notes.map(n => (
-            <div key={n.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-purple-500/20 transition-colors">
-              <div>
-                <p className="text-white text-sm">{n.title}</p>
-                <div className="flex gap-2 mt-1">
-                  {n.tags.map(t => <span key={t} className="text-[10px] text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded-full">{t}</span>)}
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
+          {filteredNotes.length === 0 && <p className="text-gray-500 text-center py-8">No notes found. Start capturing!</p>}
+          {filteredNotes.map(n => (
+            <div key={n.id} className="p-4 rounded-xl bg-white/5 border border-white/5 hover:border-purple-500/20 transition-colors">
+              <div className="flex justify-between items-start">
+                <h3 className="text-white font-medium">{n.title || 'Untitled'}</h3>
                 <span className="text-xs text-gray-500">{n.date}</span>
-                <button className="p-1.5 rounded-lg hover:bg-white/10">
-                  <Link2 size={14} className="text-gray-400" />
-                </button>
+              </div>
+              <p className="text-sm text-gray-300 mt-1 line-clamp-2">{n.content}</p>
+              <div className="flex gap-2 mt-2">
+                {n.tags?.map(t => <span key={t} className="text-[10px] text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded-full">{t}</span>)}
               </div>
             </div>
           ))}
