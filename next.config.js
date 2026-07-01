@@ -1,19 +1,26 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    // FIX: Externalize heavy Node packages to prevent bundling errors
-    serverComponentsExternalPackages: ['undici', 'firebase-admin', 'googleapis'],
-  },
+  // Konfigurasi Webpack untuk menangani package Node.js di Browser
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        undici: false,
+        crypto: false,
+        stream: false,
+        buffer: false,
+        fs: false,
+        path: false,
+        net: false,
+        tls: false,
       };
     }
     return config;
   },
-  swcMinify: true,
+  
+  // Externalize package berat agar tidak dibundel oleh Next.js
+  experimental: {
+    serverComponentsExternalPackages: ['firebase-admin', 'googleapis', 'crypto-js'],
+  },
 };
 
 module.exports = nextConfig;

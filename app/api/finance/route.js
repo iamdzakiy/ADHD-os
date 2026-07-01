@@ -1,84 +1,53 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebaseAdmin';
 
 export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get('userId');
+  const type = searchParams.get('type') || 'transactions'; 
+
+  if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
-    const month = searchParams.get('month'); // 1-12
-    const year = searchParams.get('year');   // misal: 2025
-
-    if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
-
-    let query = adminDb.collection('transactions').where('userId', '==', userId);
-
-    // LOGIKA FILTER BULAN & TAHUN
-    if (month && year) {
-      const startDate = new Date(parseInt(year), parseInt(month) - 1, 1).toISOString();
-      const endDate = new Date(parseInt(year), parseInt(month), 1).toISOString();
+    if (type === 'transactions') {
+      const month = searchParams.get('month');
+      const year = searchParams.get('year');
+      let query = adminDb.collection('users').doc(userId).collection('transactions');
       
-      query = query
-        .where('date', '>=', startDate)
-        .where('date', '<', endDate);
+      if (month && year) {
+        const start = new Date(year, month - 1, 1).toISOString();
+        const end = new Date(year, month, 0, 23, 59, 59).toISOString();
+        query = query.where('date', '>=', start).where('date', '<=', end);
+      }
+      const snap = await query.orderBy('date', 'desc').get();
+      return NextResponse.json({ data: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
+    } 
+    
+    if (type === 'accounts') {
+      const snap = await adminDb.collection('users').doc(userId).collection('accounts').get();
+      const accounts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Hitung Net Worth: Aset - Utang
+      const netWorth = accounts.reduce((acc, curr) => acc + (curr.type === 'liability' ? -curr.balance : curr.balance), 0);
+      return NextResponse.json({ data: accounts, netWorth });
     }
 
-    const snapshot = await query.orderBy('date', 'desc').get();
-    const transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-    return NextResponse.json({ transactions });
+    return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// POST untuk menambah transaksi manual
 export async function POST(req) {
+  const { userId, collection, data } = await req.json();
+  if (!userId || !collection || !data) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+
   try {
-    const body = await req.json();
-    const { userId, type, amount, description, category, date } = body;
-    
-    await adminDb.collection('transactions').add({
-      userId, type, amount: parseFloat(amount), description, 
-      category: category || 'Lainnya', date: date || new Date().toISOString()
+    const ref = await adminDb.collection('users').doc(userId).collection(collection).add({
+      ...data,
+      createdAt: new Date().toISOString()
     });
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, id: ref.id });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
-const generateMonthlyReport = () => {
-  // Ambil data transaksi bulan ini (dari state kamu)
-  const reportData = `
-    <html>
-      <head><title>Laporan Keuangan ADHD OS</title></head>
-      <body style="font-family: sans-serif; padding: 40px;">
-        <h1>Laporan Bulan: ${selectedMonth} ${selectedYear}</h1>
-        <h3>Total Pemasukan: Rp ${totalIncome.toLocaleString()}</h3>
-        <h3>Total Pengeluaran: Rp ${totalExpense.toLocaleString()}</h3>
-        <h3>Net Cashflow: Rp ${netCashflow.toLocaleString()}</h3>
-        <hr/>
-        <h2>Detail Transaksi</h2>
-        <table border="1" cellpadding="5" style="width:100%; border-collapse: collapse;">
-          <tr><th>Tanggal</th><th>Deskripsi</th><th>Kategori</th><th>Jumlah</th></tr>
-          ${transactions.map(t => `
-            <tr>
-              <td>${new Date(t.date).toLocaleDateString()}</td>
-              <td>${t.description}</td>
-              <td>${t.category}</td>
-              <td style="color: ${t.type === 'income' ? 'green' : 'red'}">
-                Rp ${t.amount.toLocaleString()}
-              </td>
-            </tr>
-          `).join('')}
-        </table>
-      </body>
-    </html>
-  `;
-  
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(reportData);
-  printWindow.document.close();
-  printWindow.focus();
-  setTimeout(() => { printWindow.print(); }, 500);
-};
