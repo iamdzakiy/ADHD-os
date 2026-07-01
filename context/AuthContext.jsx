@@ -1,11 +1,10 @@
+// context/AuthContext.jsx
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-// PERBAIKAN: Import dari firebaseClient, BUKAN firebase.js
-import { auth } from '@/lib/firebaseClient'; 
+import { auth } from '@/lib/firebaseClient';
 
 const AuthContext = createContext();
-const ALLOWED_EMAIL = process.env.NEXT_PUBLIC_ALLOWED_EMAIL || 'fadzaro10@gmail.com';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -13,26 +12,45 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        if (firebaseUser.email === ALLOWED_EMAIL) {
-          setUser(firebaseUser);
+      try {
+        if (firebaseUser) {
+          // Baca allowed email dari env, fallback ke email default
+          const ALLOWED_EMAIL = process.env.NEXT_PUBLIC_ALLOWED_EMAIL || 'fadzaro10@gmail.com';
+          
+          if (firebaseUser.email === ALLOWED_EMAIL) {
+            setUser(firebaseUser);
+          } else {
+            // Jika email salah, logout dan beri tahu user
+            await signOut(auth);
+            console.warn('Access denied for:', firebaseUser.email);
+            setUser(null);
+          }
         } else {
-          await signOut(auth);
-          alert('Akses Ditolak: Aplikasi ini dikunci untuk pemilik tertentu.');
           setUser(null);
         }
-      } else {
+      } catch (error) {
+        console.error('Auth check error:', error);
         setUser(null);
+      } finally {
+        // KRUSIAL: Pastikan loading SELALU berhenti
+        setLoading(false);
       }
-      setLoading(false);
     });
+
     return () => unsubscribe();
   }, []);
 
   return (
     <AuthContext.Provider value={{ user, loading }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
-export const useAuth = () => useContext(AuthContext);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
