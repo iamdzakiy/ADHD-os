@@ -1,0 +1,1755 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+app/
+  agenda/
+    page.jsx
+  api/
+    brain/
+      route.js
+    calendar/
+      route.js
+    finance/
+      route.js
+    vault/
+      route.js
+    wealth/
+      route.js
+  dashboard/
+    agenda/
+      page.jsx
+    brain/
+      page.jsx
+    finance/
+      page.jsx
+    vault/
+      page.jsx
+    page.jsx
+  globals.css
+  layout.jsx
+components/
+  GlassCard.jsx
+  Layout.jsx
+  QuickAdd.jsx
+context/
+  AuthContext.jsx
+functions/
+  src/
+    autoSchedule.ts
+    financeTriggers.ts
+    index.ts
+  package.json
+lib/
+  api/
+    calendar.js
+    finance.js
+    notes.js
+  encryption.js
+  firebaseAdmin.js
+  firebaseClient.js
+.gitignore
+firebase.json
+jsconfig.json
+next.config.js
+package.json
+postcss.config.js
+tailwind.config.js
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="app/dashboard/agenda/page.jsx">
+'use client';
+import { useState } from 'react';
+import GlassCard from '@/components/GlassCard';
+import { Calendar, Clock, CheckCircle, Circle } from 'lucide-react';
+
+export default function AgendaPage() {
+  const [tasks] = useState([
+    { id: 1, title: 'Deep Work: Q3 Report', time: '09:00 - 11:00', date: 'Today', done: false },
+    { id: 2, title: 'Call BCA CS', time: '14:00 - 14:30', date: 'Today', done: false },
+    { id: 3, title: 'Review Budget', time: '11:00 - 12:00', date: 'Tomorrow', done: false },
+  ]);
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold text-white flex items-center gap-3"><Calendar /> Agenda</h1>
+      <p className="text-gray-400 text-sm -mt-4">Auto-blocked by ADHD OS based on your free time.</p>
+
+      <GlassCard>
+        <h2 className="text-white font-semibold mb-4">📅 Today</h2>
+        {tasks.filter(t => t.date === 'Today').map(t => (
+          <div key={t.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors border-b border-white/5">
+            <button className="text-gray-400 hover:text-green-400"><Circle size={20} /></button>
+            <div className="flex-1">
+              <span className="text-white">{t.title}</span>
+              <div className="flex items-center gap-2 text-xs text-gray-400"><Clock size={12} /> {t.time}</div>
+            </div>
+            <span className="text-xs text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full">Auto-blocked</span>
+          </div>
+        ))}
+      </GlassCard>
+
+      <GlassCard>
+        <h2 className="text-white font-semibold mb-4">📅 Upcoming</h2>
+        {tasks.filter(t => t.date !== 'Today').map(t => (
+          <div key={t.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors border-b border-white/5">
+            <button className="text-gray-400 hover:text-green-400"><Circle size={20} /></button>
+            <div className="flex-1">
+              <span className="text-white">{t.title}</span>
+              <div className="flex items-center gap-2 text-xs text-gray-400"><Clock size={12} /> {t.time}</div>
+            </div>
+            <span className="text-xs text-blue-300 bg-blue-500/20 px-3 py-1 rounded-full">{t.date}</span>
+          </div>
+        ))}
+      </GlassCard>
+    </div>
+  );
+}
+</file>
+
+<file path="app/dashboard/page.jsx">
+'use client';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import GlassCard from '@/components/GlassCard';
+import { Wallet, TrendingUp, CalendarCheck, Brain, ArrowUpRight, ArrowDownRight, ShieldCheck } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
+export default function DashboardPage() {
+  const { user } = useAuth();
+  const [health, setHealth] = useState({ score: 0, savingsRate: 0, netWorth: 0 });
+  const [recentTxs, setRecentTxs] = useState([]);
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    if (!user) return;
+    // Simulate real-time fetch; integrate with Firebase onSnapshot here
+    setHealth({ score: 82, savingsRate: 0.15, netWorth: 52000000 });
+    setRecentTxs([
+      { id: 1, description: 'GoFood', amount: -45000, category: 'Food', date: 'Today' },
+      { id: 2, description: 'Salary', amount: 15000000, category: 'Income', date: 'Yesterday' },
+      { id: 3, description: 'Internet', amount: -350000, category: 'Utilities', date: '2 days ago' },
+    ]);
+    setTasks([
+      { id: 1, title: 'Review Q3 Budget', time: '10:00 AM' },
+      { id: 2, title: 'Call Bank BCA', time: '2:00 PM' },
+    ]);
+  }, [user]);
+
+  const data = [
+    { name: 'Jan', income: 12, expense: 9 },
+    { name: 'Feb', income: 14, expense: 10 },
+    { name: 'Mar', income: 15, expense: 12 },
+    { name: 'Apr', income: 18, expense: 11 },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Welcome back, 🧠</h1>
+          <p className="text-gray-400 text-sm mt-1">Your brain is {health.score}% organized today.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="glass-card px-4 py-2 text-xs text-gray-300 border-purple-500/20">
+            <ShieldCheck size={14} className="inline mr-1 text-green-400" /> Vault Locked
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <GlassCard className="flex flex-col">
+          <span className="text-gray-400 text-xs uppercase tracking-wider">Health Score</span>
+          <div className="flex items-end gap-2 mt-2">
+            <span className="text-4xl font-bold text-white">{health.score}</span>
+            <span className="text-sm text-green-400 mb-1">/100</span>
+          </div>
+          <div className="w-full h-1.5 bg-white/10 rounded-full mt-3 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" style={{ width: `${health.score}%` }}></div>
+          </div>
+        </GlassCard>
+        <GlassCard className="flex flex-col">
+          <span className="text-gray-400 text-xs uppercase tracking-wider">Net Worth</span>
+          <span className="text-2xl font-bold text-white mt-2">Rp {health.netWorth.toLocaleString('id-ID')}</span>
+          <span className="text-xs text-green-400 mt-1">+12% this month</span>
+        </GlassCard>
+        <GlassCard className="flex flex-col">
+          <span className="text-gray-400 text-xs uppercase tracking-wider">Today's Tasks</span>
+          <span className="text-2xl font-bold text-white mt-2">{tasks.length}</span>
+          <span className="text-xs text-blue-400 mt-1">Auto-scheduled on Calendar</span>
+        </GlassCard>
+        <GlassCard className="flex flex-col relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <span className="text-gray-400 text-xs uppercase tracking-wider">Savings Rate</span>
+          <span className="text-2xl font-bold text-white mt-2">{(health.savingsRate * 100).toFixed(0)}%</span>
+          <span className="text-xs text-gray-400 mt-1">Target: 20%</span>
+        </GlassCard>
+      </div>
+
+      {/* Chart & Agenda */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <GlassCard>
+          <h2 className="text-white font-semibold flex items-center gap-2 mb-4"><TrendingUp size={18} /> Cashflow Trend</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={data}>
+              <XAxis dataKey="name" stroke="#4a4a5a" fontSize={12} />
+              <YAxis stroke="#4a4a5a" fontSize={12} />
+              <Tooltip contentStyle={{ background: 'rgba(0,0,0,0.8)', border: '1px solid #333', borderRadius: '12px' }} />
+              <Line type="monotone" dataKey="income" stroke="#8b5cf6" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </GlassCard>
+
+        <GlassCard>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-white font-semibold flex items-center gap-2"><CalendarCheck size={18} /> Agenda</h2>
+            <span className="text-xs text-gray-400">Auto-blocked</span>
+          </div>
+          <div className="space-y-3">
+            {tasks.map(task => (
+              <div key={task.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
+                <span className="text-sm text-gray-200">{task.title}</span>
+                <span className="text-xs text-purple-300 bg-purple-500/20 px-3 py-1 rounded-full">{task.time}</span>
+              </div>
+            ))}
+            <button className="w-full text-center text-sm text-gray-400 hover:text-white transition-colors mt-2">+ Add to Calendar</button>
+          </div>
+        </GlassCard>
+      </div>
+
+      {/* Recent Activity */}
+      <GlassCard>
+        <h2 className="text-white font-semibold flex items-center gap-2 mb-4"><Wallet size={18} /> Recent Activity</h2>
+        <div className="space-y-2">
+          {recentTxs.map(tx => (
+            <div key={tx.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-full ${tx.amount > 0 ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                  {tx.amount > 0 ? <ArrowUpRight size={14} className="text-green-400" /> : <ArrowDownRight size={14} className="text-red-400" />}
+                </div>
+                <div>
+                  <span className="text-sm text-gray-200">{tx.description}</span>
+                  <p className="text-[10px] text-gray-500">{tx.category} • {tx.date}</p>
+                </div>
+              </div>
+              <span className={`text-sm font-medium ${tx.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString('id-ID')}
+              </span>
+            </div>
+          ))}
+        </div>
+      </GlassCard>
+    </div>
+  );
+}
+</file>
+
+<file path="app/globals.css">
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 15, 14, 19;
+  --background-end-rgb: 30, 27, 45;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-start-rgb));
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.25) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.25) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(236, 72, 153, 0.08) 0px, transparent 50%);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.15);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 12px 18px;
+  color: white;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.glass-input:focus {
+  border-color: #8b5cf6;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.glass-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.4);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.6);
+}
+
+/* Animations */
+@keyframes slideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-in {
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</file>
+
+<file path="app/layout.jsx">
+import './globals.css';
+import { Inter } from 'next/font/google';
+import { AuthProvider } from '@/context/AuthContext';
+import Layout from '@/components/Layout';
+
+const inter = Inter({ subsets: ['latin'], display: 'swap' });
+
+export const metadata = {
+  title: 'ADHD OS - Life Management System',
+  description: 'Unified finance, calendar, second brain, and vault.',
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en" className="dark">
+      <body className={inter.className}>
+        <AuthProvider>
+          <Layout>{children}</Layout>
+        </AuthProvider>
+      </body>
+    </html>
+  );
+}
+</file>
+
+<file path="components/GlassCard.jsx">
+export default function GlassCard({ children, className = '', hover = true }) {
+  return (
+    <div className={`glass-card p-6 ${hover ? 'hover:border-purple-500/30 transition-all duration-300' : ''} ${className}`}>
+      {children}
+    </div>
+  );
+}
+</file>
+
+<file path="components/Layout.jsx">
+'use client';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { 
+  Home, Wallet, Brain, Calendar, Lock, Settings, 
+  LogOut, User, Sparkles 
+} from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import QuickAdd from './QuickAdd';
+
+const navItems = [
+  { name: 'Dashboard', icon: Home, path: '/' },
+  { name: 'Finance', icon: Wallet, path: '/dashboard/finance' },
+  { name: '2nd Brain', icon: Brain, path: '/dashboard/brain' },
+  { name: 'Agenda', icon: Calendar, path: '/dashboard/agenda' },
+  { name: 'Vault', icon: Lock, path: '/dashboard/vault' },
+];
+
+export default function Layout({ children }) {
+  const pathname = usePathname();
+  const { user, logout } = useAuth();
+
+  return (
+    <div className="flex min-h-screen p-4 md:p-6 gap-4 md:gap-6 relative">
+      {/* Ambient Background Glows */}
+      <div className="fixed top-[-20%] left-[-10%] w-[600px] h-[600px] bg-purple-600 rounded-full blur-[200px] opacity-20 animate-float pointer-events-none"></div>
+      <div className="fixed bottom-[-20%] right-[-10%] w-[700px] h-[700px] bg-blue-600 rounded-full blur-[200px] opacity-15 animate-float pointer-events-none" style={{ animationDelay: '-4s' }}></div>
+
+      {/* Sidebar */}
+      <aside className="glass-card w-20 md:w-72 p-4 flex flex-col items-center md:items-start gap-2 h-[calc(100vh-3rem)] sticky top-4 z-40 shrink-0 overflow-y-auto">
+        <div className="flex items-center gap-3 mb-8 px-2 w-full">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/30 ring-1 ring-white/10">
+            <span className="text-white font-black text-xl">Ψ</span>
+          </div>
+          <h1 className="text-white font-bold text-xl hidden md:block tracking-tight">ADHD OS</h1>
+          <span className="ml-auto text-[10px] font-mono text-gray-500 hidden md:block">v2.0</span>
+        </div>
+
+        <nav className="flex-1 w-full space-y-1">
+          {navItems.map((item) => {
+            const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
+            return (
+              <Link href={item.path} key={item.path} className="block">
+                <div className={`flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 cursor-pointer group ${
+                  isActive 
+                    ? 'bg-white/10 border border-white/10 shadow-lg shadow-purple-500/5' 
+                    : 'hover:bg-white/5'
+                }`}>
+                  <item.icon className={`w-5 h-5 ${isActive ? 'text-purple-400' : 'text-gray-500 group-hover:text-white'}`} />
+                  <span className={`hidden md:block font-medium text-sm ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
+                    {item.name}
+                  </span>
+                  {isActive && <span className="ml-auto w-1.5 h-8 rounded-full bg-purple-500 hidden md:block"></span>}
+                </div>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="w-full border-t border-white/5 pt-4 space-y-2">
+          <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/5 w-full">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-600 to-gray-800 flex items-center justify-center text-xs font-bold text-white ring-1 ring-white/10">
+              {user?.displayName?.charAt(0) || 'U'}
+            </div>
+            <div className="hidden md:block flex-1 min-w-0">
+              <p className="text-xs text-white truncate">{user?.displayName || 'User'}</p>
+              <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
+            </div>
+          </div>
+          <button onClick={logout} className="flex items-center gap-4 px-4 py-2 w-full rounded-2xl hover:bg-white/5 transition-colors">
+            <LogOut size={18} className="text-gray-500" />
+            <span className="hidden md:block text-sm text-gray-400 hover:text-white">Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 min-w-0 overflow-y-auto h-[calc(100vh-3rem)] pb-24">
+        <div className="max-w-6xl mx-auto">
+          {children}
+        </div>
+      </main>
+
+      {/* Floating Quick Add - The ADHD Instant Capture */}
+      <QuickAdd />
+    </div>
+  );
+}
+</file>
+
+<file path="functions/src/autoSchedule.ts">
+import * as admin from 'firebase-admin';
+import { google } from 'googleapis';
+
+// In production, fetch the user's refresh token from Firestore.
+// For demo, using env variable.
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI
+);
+oauth2Client.setCredentials({
+  refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+});
+
+export const autoScheduleTask = async (task: any, userId: string) => {
+  try {
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
+    // Get free slots for tomorrow
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(now.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const dayAfter = new Date(tomorrow);
+    dayAfter.setDate(tomorrow.getDate() + 1);
+
+    const freeBusy = await calendar.freebusy.query({
+      requestBody: {
+        timeMin: tomorrow.toISOString(),
+        timeMax: dayAfter.toISOString(),
+        items: [{ id: 'primary' }],
+      },
+    });
+
+    const busySlots = freeBusy.data.calendars?.primary?.busy || [];
+    let startTime = new Date(tomorrow);
+    startTime.setHours(9, 0, 0, 0);
+    const endTime = new Date(tomorrow);
+    endTime.setHours(17, 0, 0, 0);
+
+    let foundSlot = false;
+    while (startTime < endTime) {
+      const slotEnd = new Date(startTime);
+      slotEnd.setHours(startTime.getHours() + 2);
+      
+      const isBusy = busySlots.some((busy: any) => {
+        const busyStart = new Date(busy.start);
+        const busyEnd = new Date(busy.end);
+        return (startTime < busyEnd && slotEnd > busyStart);
+      });
+
+      if (!isBusy) { foundSlot = true; break; }
+      startTime.setHours(startTime.getHours() + 1);
+    }
+
+    if (!foundSlot) {
+      console.log('No free slot found for user:', userId);
+      return;
+    }
+
+    const eventEnd = new Date(startTime);
+    eventEnd.setHours(startTime.getHours() + 2);
+
+    await calendar.events.insert({
+      calendarId: 'primary',
+      requestBody: {
+        summary: `🧠 Auto-Block: ${task.title || 'Deep Work'}`,
+        description: `Scheduled by ADHD OS for user ${userId}`,
+        start: { dateTime: startTime.toISOString(), timeZone: 'Asia/Jakarta' },
+        end: { dateTime: eventEnd.toISOString(), timeZone: 'Asia/Jakarta' },
+        colorId: '2',
+      },
+    });
+
+    // Mark task as scheduled in Firestore
+    await admin.firestore()
+      .collection('users').doc(userId).collection('tasks')
+      .doc(task.id || task._id)
+      .update({ scheduled: true, scheduledTime: startTime.toISOString() });
+
+  } catch (error) {
+    console.error('Auto-schedule error:', error);
+  }
+};
+</file>
+
+<file path="functions/src/financeTriggers.ts">
+import * as admin from 'firebase-admin';
+
+export const recalculateFinanceHealth = async (userId: string) => {
+  const transactionsSnapshot = await admin.firestore()
+    .collection('users').doc(userId).collection('transactions').get();
+  
+  let totalIncome = 0, totalExpenses = 0;
+  transactionsSnapshot.docs.forEach(doc => {
+    const data = doc.data();
+    if (data.type === 'Income') totalIncome += data.amount || 0;
+    else totalExpenses += data.amount || 0;
+  });
+
+  const savingsRate = totalIncome > 0 ? (totalIncome - totalExpenses) / totalIncome : 0;
+  const score = Math.min(100, Math.max(0, 40 + (savingsRate * 200)));
+
+  await admin.firestore().collection('users').doc(userId).set({
+    healthScore: Math.round(score),
+    savingsRate: savingsRate,
+    totalIncome,
+    totalExpenses,
+    netWorth: totalIncome - totalExpenses,
+    updatedAt: new Date().toISOString(),
+  }, { merge: true });
+};
+</file>
+
+<file path="functions/src/index.ts">
+import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
+import { autoScheduleTask } from './autoSchedule';
+import { recalculateFinanceHealth } from './financeTriggers';
+
+admin.initializeApp();
+
+// Trigger: When a new task is added, auto-schedule it.
+export const onTaskCreate = functions.firestore
+  .document('users/{userId}/tasks/{taskId}')
+  .onCreate(async (snap, context) => {
+    const task = snap.data();
+    if (task.scheduled) return; // Already scheduled
+    await autoScheduleTask(task, context.params.userId);
+  });
+
+// Trigger: When a transaction is added, recalculate health score.
+export const onTransactionCreate = functions.firestore
+  .document('users/{userId}/transactions/{txId}')
+  .onCreate(async (snap, context) => {
+    await recalculateFinanceHealth(context.params.userId);
+  });
+
+// Trigger: Every hour, scan for unscheduled tasks.
+export const hourlyScheduler = functions.pubsub
+  .schedule('0 * * * *')
+  .onRun(async (context) => {
+    const usersSnapshot = await admin.firestore().collection('users').get();
+    for (const userDoc of usersSnapshot.docs) {
+      const tasksSnapshot = await admin.firestore()
+        .collection('users').doc(userDoc.id).collection('tasks')
+        .where('scheduled', '==', false).get();
+      
+      for (const taskDoc of tasksSnapshot.docs) {
+        await autoScheduleTask(taskDoc.data(), userDoc.id);
+      }
+    }
+    return null;
+  });
+</file>
+
+<file path="functions/package.json">
+{
+  "name": "functions",
+  "description": "Cloud Functions for ADHD OS",
+  "scripts": {
+    "build": "tsc",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "firebase-admin": "^11.11.1",
+    "firebase-functions": "^4.5.0",
+    "googleapis": "^126.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.0",
+    "firebase-functions-test": "^3.1.0"
+  },
+  "private": true
+}
+</file>
+
+<file path="lib/api/calendar.js">
+export async function addTask(task) {
+  const res = await fetch('/api/calendar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(task),
+  });
+  if (!res.ok) throw new Error('Failed to add task');
+  return res.json();
+}
+
+export async function getTasks(userId) {
+  const res = await fetch(`/api/calendar?userId=${userId}`);
+  if (!res.ok) throw new Error('Failed to fetch tasks');
+  return res.json();
+}
+</file>
+
+<file path="lib/encryption.js">
+// ⚠️ This runs 100% in the browser. Master password never touches the network.
+export async function encryptData(text, masterPassword) {
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", enc.encode(masterPassword), "PBKDF2", false, ["deriveKey"]
+  );
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+    keyMaterial, { name: "AES-GCM", length: 256 }, true, ["encrypt"]
+  );
+  
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv: iv },
+    key, enc.encode(text)
+  );
+  
+  // Combine: salt (16) + iv (12) + encrypted
+  const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+  combined.set(salt, 0);
+  combined.set(iv, salt.length);
+  combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+  
+  return btoa(String.fromCharCode(...combined));
+}
+
+export async function decryptData(encodedData, masterPassword) {
+  const combined = Uint8Array.from(atob(encodedData), c => c.charCodeAt(0));
+  const salt = combined.slice(0, 16);
+  const iv = combined.slice(16, 28);
+  const encrypted = combined.slice(28);
+  
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", enc.encode(masterPassword), "PBKDF2", false, ["deriveKey"]
+  );
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+    keyMaterial, { name: "AES-GCM", length: 256 }, true, ["decrypt"]
+  );
+  
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: iv },
+    key, encrypted
+  );
+  return new TextDecoder().decode(decrypted);
+}
+</file>
+
+<file path="lib/firebaseAdmin.js">
+import admin from 'firebase-admin';
+
+if (!admin.apps.length) {
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        // Fix otomatis untuk format newline di .env
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      }),
+    });
+  } catch (error) {
+    console.error('Firebase Admin Init Error:', error);
+  }
+}
+
+export const adminDb = admin.firestore();
+export default admin;
+</file>
+
+<file path="lib/firebaseClient.js">
+import { initializeApp, getApps } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+
+const clientConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+
+const clientApp = !getApps().length ? initializeApp(clientConfig) : getApps()[0];
+
+export const auth = getAuth(clientApp);
+export const db = getFirestore(clientApp);
+</file>
+
+<file path=".gitignore">
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# firebase
+firebase-debug.log
+.firebase/
+*.firebaserc
+
+# functions
+/functions/node_modules
+/functions/.runtimeconfig.json
+</file>
+
+<file path="firebase.json">
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": {
+    "predeploy": [
+      "npm --prefix \"$RESOURCE_DIR\" run lint",
+      "npm --prefix \"$RESOURCE_DIR\" run build"
+    ],
+    "source": "functions"
+  },
+  "hosting": {
+    "public": "out",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
+</file>
+
+<file path="jsconfig.json">
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  }
+}
+</file>
+
+<file path="postcss.config.js">
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+</file>
+
+<file path="tailwind.config.js">
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        glass: {
+          DEFAULT: 'rgba(255, 255, 255, 0.05)',
+          border: 'rgba(255, 255, 255, 0.08)',
+        }
+      },
+      backdropBlur: {
+        xs: '2px',
+      },
+      animation: {
+        'float': 'float 8s ease-in-out infinite',
+        'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0px) scale(1)' },
+          '50%': { transform: 'translateY(-30px) scale(1.05)' },
+        },
+        pulseGlow: {
+          '0%': { boxShadow: '0 0 20px rgba(139, 92, 246, 0.1)' },
+          '50%': { boxShadow: '0 0 40px rgba(139, 92, 246, 0.3)' },
+          '100%': { boxShadow: '0 0 20px rgba(139, 92, 246, 0.1)' },
+        }
+      }
+    },
+  },
+  plugins: [],
+}
+</file>
+
+<file path="app/agenda/page.jsx">
+'use client';
+import { useState } from 'react';
+import { DndContext, useDraggable, useDroppable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { useAuth } from '@/context/AuthContext';
+
+// Komponen Tugas yang bisa di-drag
+function DraggableTask({ id, title, duration }) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id });
+  const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
+
+  return (
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes}
+      className="bg-purple-600/80 backdrop-blur text-white p-3 rounded-lg mb-2 cursor-grab active:cursor-grabbing shadow-lg border border-purple-400/30">
+      <div className="font-semibold">{title}</div>
+      <div className="text-xs opacity-70">{duration}h</div>
+    </div>
+  );
+}
+
+// Komponen Slot Waktu yang bisa di-drop
+function DroppableSlot({ id, time, children }) {
+  const { isOver, setNodeRef } = useDroppable({ id });
+  return (
+    <div ref={setNodeRef} className={`flex border-b border-gray-700/50 h-20 p-2 transition-colors ${isOver ? 'bg-purple-900/30' : 'bg-white/5'}`}>
+      <div className="w-16 text-gray-400 text-sm pt-1">{time}</div>
+      <div className="flex-1 flex flex-col gap-1">{children}</div>
+    </div>
+  );
+}
+
+export default function AgendaPage() {
+  const { user } = useAuth();
+  const [tasks] = useState([
+    { id: 't1', title: 'Deep Work: AI Project', duration: 2 },
+    { id: 't2', title: 'Balas Email & Admin', duration: 0.5 },
+  ]);
+  const [schedule, setSchedule] = useState({});
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const task = tasks.find(t => t.id === active.id);
+    const hour = parseInt(over.id.split('-')[1]);
+    
+    // 1. Update UI Lokal
+    setSchedule(prev => ({ ...prev, [over.id]: task }));
+
+    // 2. SYNC KE GOOGLE CALENDAR
+    const startTime = new Date();
+    startTime.setHours(hour, 0, 0, 0);
+    const endTime = new Date(startTime.getTime() + task.duration * 60 * 60 * 1000);
+
+    await fetch('/api/calendar', {
+      method: 'POST',
+      body: JSON.stringify({
+        summary: task.title,
+        start: startTime.toISOString(),
+        end: endTime.toISOString(),
+      })
+    });
+  };
+
+  const hours = Array.from({ length: 12 }, (_, i) => i + 8); // 08:00 - 19:00
+
+  return (
+    <div className="flex h-screen text-white bg-gray-900/50 backdrop-blur-xl">
+      {/* KIRI: Daftar Tugas */}
+      <div className="w-1/3 p-6 border-r border-gray-700/50 overflow-y-auto">
+        <h2 className="text-xl font-bold mb-4 text-purple-400">📋 Today's Tasks</h2>
+        {tasks.map(task => <DraggableTask key={task.id} id={task.id} title={task.title} duration={task.duration} />)}
+      </div>
+
+      {/* KANAN: Timeline Kalender */}
+      <div className="flex-1 overflow-y-auto p-6">
+        <h2 className="text-xl font-bold mb-4 text-blue-400">📅 Time Blocking (Drag tasks here)</h2>
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          {hours.map(hour => {
+            const slotId = `slot-${hour}`;
+            return (
+              <DroppableSlot key={slotId} id={slotId} time={`${hour}:00`}>
+                {schedule[slotId] && (
+                  <div className="bg-blue-600/80 p-2 rounded text-sm h-full flex items-center">
+                    {schedule[slotId].title}
+                  </div>
+                )}
+              </DroppableSlot>
+            );
+          })}
+        </DndContext>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="app/api/brain/route.js">
+import { NextResponse } from 'next/server';
+import { adminDb } from '@/lib/firebaseAdmin';
+
+export async function POST(req) {
+  try {
+    const { title, content, userId, tags, date } = await req.json();
+    const ref = adminDb.collection('users').doc(userId).collection('notes').doc();
+    await ref.set({
+      title,
+      content,
+      tags: tags || [],
+      date: date || new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString(),
+    });
+    return NextResponse.json({ success: true, id: ref.id });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get('userId');
+  if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+
+  const snapshot = await adminDb.collection('users').doc(userId).collection('notes')
+    .orderBy('createdAt', 'desc')
+    .limit(50)
+    .get();
+  
+  const notes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return NextResponse.json(notes);
+}
+</file>
+
+<file path="app/api/calendar/route.js">
+import { NextResponse } from 'next/server';
+import { google } from 'googleapis';
+
+export async function POST(req) {
+  try {
+    const { summary, start, end, description } = await req.json();
+    
+    const auth = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    );
+    auth.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
+
+    const calendar = google.calendar({ version: 'v3', auth });
+    
+    const event = {
+      summary: summary || 'Focus Time',
+      description: description || 'Scheduled via ADHD OS',
+      start: { dateTime: start, timeZone: 'Asia/Jakarta' },
+      end: { dateTime: end, timeZone: 'Asia/Jakarta' },
+    };
+
+    const res = await calendar.events.insert({
+      calendarId: 'primary',
+      resource: event,
+    });
+
+    return NextResponse.json({ success: true, eventId: res.data.id });
+  } catch (error) {
+    console.error('Calendar Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+</file>
+
+<file path="app/api/wealth/route.js">
+import { NextResponse } from 'next/server';
+import { adminDb } from '@/lib/firebaseAdmin';
+
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get('userId');
+
+  // 1. Ambil semua Akun (Aset & Utang)
+  const accSnap = await adminDb.collection('users').doc(userId).collection('accounts').get();
+  const accounts = accSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  
+  // Hitung Net Worth (Aset - Utang)
+  const totalAssets = accounts.filter(a => a.type !== 'loan').reduce((sum, a) => sum + (a.balance || 0), 0);
+  const totalLiabilities = accounts.filter(a => a.type === 'loan').reduce((sum, a) => sum + (a.balance || 0), 0);
+  const netWorth = totalAssets - totalLiabilities;
+
+  // 2. Ambil Target Savings (Goals)
+  const goalSnap = await adminDb.collection('users').doc(userId).collection('goals').get();
+  const goals = goalSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  return NextResponse.json({ accounts, netWorth, totalAssets, totalLiabilities, goals });
+}
+</file>
+
+<file path="app/dashboard/brain/page.jsx">
+'use client';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import GlassCard from '@/components/GlassCard';
+import { Brain, Search, Plus, X } from 'lucide-react';
+import { getNotes, addNote } from '@/lib/api/notes';
+
+export default function BrainPage() {
+  const { user } = useAuth();
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showNew, setShowNew] = useState(false);
+  const [newContent, setNewContent] = useState('');
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    if (!user) return;
+    getNotes(user.uid).then(data => {
+      setNotes(data);
+      setLoading(false);
+    });
+  }, [user]);
+
+  const handleSaveNote = async () => {
+    if (!newContent.trim() || !user) return;
+    await addNote({
+      title: newContent.slice(0, 40) + (newContent.length > 40 ? '...' : ''),
+      content: newContent,
+      userId: user.uid,
+      tags: ['#brain'],
+    });
+    setNewContent('');
+    setShowNew(false);
+    const updated = await getNotes(user.uid);
+    setNotes(updated);
+  };
+
+  const filteredNotes = notes.filter(n => 
+    n.title?.toLowerCase().includes(search.toLowerCase()) ||
+    n.content?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (loading) return <div className="text-gray-400">Loading your brain...</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-white flex items-center gap-3"><Brain /> 2nd Brain</h1>
+        <button onClick={() => setShowNew(true)} className="glass-card px-5 py-2 flex items-center gap-2 text-sm text-white hover:border-purple-500/50">
+          <Plus size={16} /> New Note
+        </button>
+      </div>
+
+      {showNew && (
+        <GlassCard className="border-purple-500/20">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-white font-semibold">✍️ New Thought</h2>
+            <button onClick={() => setShowNew(false)} className="text-gray-400 hover:text-white"><X size={18} /></button>
+          </div>
+          <textarea
+            value={newContent}
+            onChange={(e) => setNewContent(e.target.value)}
+            placeholder="Write anything... ideas, notes, reminders..."
+            className="glass-input min-h-[120px]"
+          />
+          <div className="flex justify-end mt-3">
+            <button onClick={handleSaveNote} className="glass-card px-6 py-2 text-white hover:border-green-500/50">
+              Save to Brain
+            </button>
+          </div>
+        </GlassCard>
+      )}
+
+      <GlassCard>
+        <div className="relative mb-4">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <input 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search your brain..." 
+            className="glass-input pl-10" 
+          />
+        </div>
+        <div className="space-y-2">
+          {filteredNotes.length === 0 && <p className="text-gray-500 text-center py-8">No notes found. Start capturing!</p>}
+          {filteredNotes.map(n => (
+            <div key={n.id} className="p-4 rounded-xl bg-white/5 border border-white/5 hover:border-purple-500/20 transition-colors">
+              <div className="flex justify-between items-start">
+                <h3 className="text-white font-medium">{n.title || 'Untitled'}</h3>
+                <span className="text-xs text-gray-500">{n.date}</span>
+              </div>
+              <p className="text-sm text-gray-300 mt-1 line-clamp-2">{n.content}</p>
+              <div className="flex gap-2 mt-2">
+                {n.tags?.map(t => <span key={t} className="text-[10px] text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded-full">{t}</span>)}
+              </div>
+            </div>
+          ))}
+        </div>
+      </GlassCard>
+    </div>
+  );
+}
+</file>
+
+<file path="app/dashboard/finance/page.jsx">
+'use client';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext'; // Sesuaikan dengan context auth kamu
+
+export default function FinancePage() {
+  const { user } = useAuth();
+  const [transactions, setTransactions] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+  useEffect(() => {
+    if (user) fetchTransactions();
+  }, [user, selectedMonth, selectedYear]); // Akan fetch ulang setiap dropdown berubah!
+
+  const fetchTransactions = async () => {
+    const res = await fetch(`/api/finance?userId=${user.uid}&month=${selectedMonth}&year=${selectedYear}`);
+    const data = await res.json();
+    setTransactions(data.transactions || []);
+  };
+
+  // KALKULASI LAPORAN KEUANGAN OTOMATIS
+  const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+  const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+  const netCashflow = totalIncome - totalExpense;
+  const healthScore = totalIncome > 0 ? Math.min(100, Math.round((netCashflow / totalIncome) * 100)) : 0;
+
+  return (
+    <div className="p-6 space-y-6 text-white">
+      <h1 className="text-2xl font-bold">💰 Manajemen Keuangan</h1>
+
+      {/* DROPDOWN BULAN & TAHUN */}
+      <div className="flex gap-4 items-center bg-white/10 p-4 rounded-xl backdrop-blur-md">
+        <span>Periode:</span>
+        <select value={selectedMonth} onChange={(e) => setSelectedMonth(Number(e.target.value))} className="bg-gray-800 p-2 rounded">
+          {months.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+        </select>
+        <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))} className="bg-gray-800 p-2 rounded">
+          {[2023, 2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+        </select>
+      </div>
+
+      {/* KARTU LAPORAN KEUANGAN */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-green-500/20 p-4 rounded-xl"><p className="text-sm opacity-70">Pemasukan</p><p className="text-xl font-bold">Rp {totalIncome.toLocaleString()}</p></div>
+        <div className="bg-red-500/20 p-4 rounded-xl"><p className="text-sm opacity-70">Pengeluaran</p><p className="text-xl font-bold">Rp {totalExpense.toLocaleString()}</p></div>
+        <div className="bg-blue-500/20 p-4 rounded-xl"><p className="text-sm opacity-70">Net Cashflow</p><p className={`text-xl font-bold ${netCashflow >= 0 ? 'text-green-400' : 'text-red-400'}`}>Rp {netCashflow.toLocaleString()}</p></div>
+        <div className="bg-purple-500/20 p-4 rounded-xl"><p className="text-sm opacity-70">Health Score</p><p className="text-xl font-bold">{healthScore}/100</p></div>
+      </div>
+
+      {/* DAFTAR TRANSAKSI */}
+      <div className="bg-white/5 p-4 rounded-xl">
+        <h2 className="text-lg mb-4">Transaksi Periode Ini ({transactions.length})</h2>
+        <ul className="space-y-2">
+          {transactions.map(t => (
+            <li key={t.id} className="flex justify-between bg-black/20 p-3 rounded">
+              <span>{t.description} ({t.category})</span>
+              <span className={t.type === 'income' ? 'text-green-400' : 'text-red-400'}>Rp {t.amount.toLocaleString()}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="app/dashboard/vault/page.jsx">
+'use client';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import CryptoJS from 'crypto-js';
+
+export default function VaultPage() {
+  const { user } = useAuth();
+  const [items, setItems] = useState([]);
+  const [masterKey, setMasterKey] = useState('');
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [visibleItems, setVisibleItems] = useState({});
+
+  useEffect(() => { if (user && isUnlocked) fetchItems(); }, [user, isUnlocked]);
+
+  const fetchItems = async () => {
+    const res = await fetch(`/api/vault?userId=${user.uid}`);
+    const data = await res.json();
+    setItems(data.items);
+  };
+
+  const handleAdd = async (title, username, password) => {
+    await fetch('/api/vault', {
+      method: 'POST',
+      body: JSON.stringify({ userId: user.uid, title, username, password, masterKey })
+    });
+    fetchItems();
+  };
+
+  const toggleVisibility = (id, encryptedUser, encryptedPass) => {
+    // Decrypt
+    const dUser = CryptoJS.AES.decrypt(encryptedUser, masterKey).toString(CryptoJS.enc.Utf8);
+    const dPass = CryptoJS.AES.decrypt(encryptedPass, masterKey).toString(CryptoJS.enc.Utf8);
+    
+    setVisibleItems(prev => ({ ...prev, [id]: { user: dUser, pass: dPass } }));
+    
+    // AUTO-HIDE setelah 10 detik (Fitur keamanan ADHD OS)
+    setTimeout(() => {
+      setVisibleItems(prev => {
+        const newState = { ...prev };
+        delete newState[id];
+        return newState;
+      });
+    }, 10000);
+  };
+
+  if (!isUnlocked) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen text-white">
+        <h1 className="text-3xl mb-4">🔒 Brankas Digital</h1>
+        <input type="password" placeholder="Masukkan Master Password" 
+          onChange={(e) => setMasterKey(e.target.value)} className="p-3 bg-gray-800 rounded text-white mb-4" />
+        <button onClick={() => setIsUnlocked(true)} className="bg-purple-600 px-6 py-2 rounded">Buka</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 text-white">
+      <h1 className="text-2xl mb-6">🔒 Vault (Terkunci dengan AES-256)</h1>
+      <div className="grid gap-4">
+        {items.map(item => (
+          <div key={item.id} className="bg-white/10 p-4 rounded-xl flex justify-between items-center">
+            <div>
+              <h3 className="font-bold">{item.title}</h3>
+              {visibleItems[item.id] ? (
+                <div className="text-sm text-green-400">
+                  <p>U: {visibleItems[item.id].user}</p>
+                  <p>P: {visibleItems[item.id].pass}</p>
+                  <p className="text-xs text-gray-400 mt-1">Menyembunyikan dalam beberapa detik...</p>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400">••••••••••••</p>
+              )}
+            </div>
+            <button onClick={() => toggleVisibility(item.id, item.username, item.password)} className="bg-blue-600 px-3 py-1 rounded">
+              👁️ Lihat
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="lib/api/finance.js">
+import Papa from 'papaparse';
+
+const handleCSVUpload = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: async (results) => {
+      // Mapping kolom CSV (Sesuaikan dengan format CSV bank kamu)
+      const transactions = results.data.map(row => {
+        // Contoh format umum mutasi bank:
+        const date = row['Tanggal'] || row['Date'];
+        const description = row['Keterangan'] || row['Description'];
+        const debit = parseFloat(row['Debit'] || row['Mutasi (DB)'] || 0);
+        const credit = parseFloat(row['Kredit'] || row['Mutasi (CR)'] || 0);
+
+        return {
+          userId: user.uid,
+          date: new Date(date).toISOString(),
+          description: description,
+          amount: debit > 0 ? debit : credit,
+          type: debit > 0 ? 'expense' : 'income', // Debit = Keluar, Kredit = Masuk
+          category: 'Imported CSV'
+        };
+      }).filter(t => t.description); // Buang baris kosong
+
+      // Kirim semua data ke backend sekaligus (Bulk Insert)
+      await fetch('/api/finance/bulk', { // Kamu perlu membuat endpoint bulk POST
+        method: 'POST',
+        body: JSON.stringify({ transactions })
+      });
+      
+      alert(`${transactions.length} transaksi berhasil diimpor!`);
+      fetchTransactions(); // Refresh tampilan
+    }
+  });
+};
+
+// Di JSX, tambahkan tombol ini:
+// <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" id="csv-upload" />
+// <label htmlFor="csv-upload" className="cursor-pointer bg-blue-600 px-4 py-2 rounded">Import CSV</label>
+
+export async function addTransaction(transaction) {
+  const res = await fetch('/api/finance', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(transaction),
+  });
+  if (!res.ok) throw new Error('Failed to add transaction');
+  return res.json();
+}
+
+export async function getTransactions(userId) {
+  const res = await fetch(`/api/finance?userId=${userId}`);
+  if (!res.ok) throw new Error('Failed to fetch transactions');
+  return res.json();
+}
+
+export async function importCSV(file, userId) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('userId', userId);
+  const res = await fetch('/api/finance', {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) throw new Error('Failed to import CSV');
+  return res.json();
+}
+</file>
+
+<file path="lib/api/notes.js">
+export async function addNote(note) {
+  const res = await fetch('/api/brain', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(note),
+  });
+  if (!res.ok) throw new Error('Failed to save note');
+  return res.json();
+}
+
+export async function getNotes(userId) {
+  const res = await fetch(`/api/brain?userId=${userId}`);
+  if (!res.ok) throw new Error('Failed to fetch notes');
+  return res.json();
+}
+</file>
+
+<file path="app/api/finance/route.js">
+import { NextResponse } from 'next/server';
+import { adminDb } from '@/lib/firebaseAdmin';
+
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get('userId');
+  const type = searchParams.get('type') || 'transactions'; 
+
+  if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+
+  try {
+    if (type === 'transactions') {
+      const month = searchParams.get('month');
+      const year = searchParams.get('year');
+      let query = adminDb.collection('users').doc(userId).collection('transactions');
+      
+      if (month && year) {
+        const start = new Date(year, month - 1, 1).toISOString();
+        const end = new Date(year, month, 0, 23, 59, 59).toISOString();
+        query = query.where('date', '>=', start).where('date', '<=', end);
+      }
+      const snap = await query.orderBy('date', 'desc').get();
+      return NextResponse.json({ data: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
+    } 
+    
+    if (type === 'accounts') {
+      const snap = await adminDb.collection('users').doc(userId).collection('accounts').get();
+      const accounts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Hitung Net Worth: Aset - Utang
+      const netWorth = accounts.reduce((acc, curr) => acc + (curr.type === 'liability' ? -curr.balance : curr.balance), 0);
+      return NextResponse.json({ data: accounts, netWorth });
+    }
+
+    return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function POST(req) {
+  const { userId, collection, data } = await req.json();
+  if (!userId || !collection || !data) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+
+  try {
+    const ref = await adminDb.collection('users').doc(userId).collection(collection).add({
+      ...data,
+      createdAt: new Date().toISOString()
+    });
+    return NextResponse.json({ success: true, id: ref.id });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+</file>
+
+<file path="app/api/vault/route.js">
+import { NextResponse } from 'next/server';
+import { adminDb } from '@/lib/firebaseAdmin';
+import CryptoJS from 'crypto-js';
+
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get('userId');
+  const snap = await adminDb.collection('users').doc(userId).collection('vault').get();
+  return NextResponse.json({ data: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
+}
+
+export async function POST(req) {
+  const { userId, title, username, password, masterKey } = await req.json();
+  
+  // Enkripsi AES-256 sebelum masuk ke database
+  const encUser = CryptoJS.AES.encrypt(username, masterKey).toString();
+  const encPass = CryptoJS.AES.encrypt(password, masterKey).toString();
+
+  await adminDb.collection('users').doc(userId).collection('vault').add({
+    title,
+    username: encUser,
+    password: encPass,
+    createdAt: new Date().toISOString()
+  });
+  return NextResponse.json({ success: true });
+}
+</file>
+
+<file path="components/QuickAdd.jsx">
+// components/QuickAdd.jsx
+import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+
+export default function QuickAdd() {
+  const { user } = useAuth();
+  const [text, setText] = useState('');
+
+  const handleMagicAdd = async () => {
+    if (!text.trim() || !user) return;
+    const lowerText = text.toLowerCase();
+
+    // 1. DETEKSI UANG (Finance)
+    // Cek apakah ada angka dan tidak ada kata kunci jadwal/ide
+    const moneyRegex = /(Rp\s*|IDR\s*)?([\d,.]+)\s*([kK])?/;
+    const isMoney = moneyRegex.test(text) && !lowerText.includes('remind') && !lowerText.includes('idea') && !lowerText.includes('besok');
+    
+    if (isMoney) {
+      const match = text.match(moneyRegex);
+      let amount = parseFloat(match[2].replace(',', '.'));
+      if (match[3]) amount *= 1000; // Jika ada 'k' (35k -> 35000)
+      
+      await fetch('/api/finance', {
+        method: 'POST',
+        body: JSON.stringify({ userId: user.uid, type: 'expense', amount, description: text, category: 'Auto-QuickAdd' })
+      });
+      alert('Tercatat sebagai Pengeluaran!');
+    } 
+    // 2. DETEKSI JADWAL (Calendar)
+    else if (lowerText.includes('besok') || lowerText.includes('jam') || lowerText.includes('remind') || lowerText.includes('meeting')) {
+      await fetch('/api/calendar', {
+        method: 'POST',
+        body: JSON.stringify({ userId: user.uid, title: text, autoSchedule: true })
+      });
+      alert('Ditambahkan ke Agenda & Kalender!');
+    } 
+    // 3. DEFAULT: 2ND BRAIN
+    else {
+      await fetch('/api/brain', {
+        method: 'POST',
+        body: JSON.stringify({ userId: user.uid, content: text })
+      });
+      alert('Disimpan di 2nd Brain!');
+    }
+    
+    setText(''); // Reset input
+  };
+
+  return (
+    <div className="fixed bottom-6 right-6 flex flex-col items-end">
+      <input 
+        type="text" value={text} onChange={(e) => setText(e.target.value)} 
+        onKeyDown={(e) => e.key === 'Enter' && handleMagicAdd()}
+        placeholder="Ketik apapun (Lunch 35k, Meeting besok jam 10, Idea...)" 
+        className="p-3 rounded-lg bg-gray-800 text-white mb-2 w-80"
+      />
+      <button onClick={handleMagicAdd} className="p-4 bg-purple-600 rounded-full shadow-lg hover:bg-purple-700">
+        ✨ Quick Add
+      </button>
+    </div>
+  );
+}
+</file>
+
+<file path="context/AuthContext.jsx">
+// context/AuthContext.jsx
+'use client';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebaseClient';
+
+const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      try {
+        if (firebaseUser) {
+          // Baca allowed email dari env, fallback ke email default
+          const ALLOWED_EMAIL = process.env.NEXT_PUBLIC_ALLOWED_EMAIL || 'fadzaro10@gmail.com';
+          
+          if (firebaseUser.email === ALLOWED_EMAIL) {
+            setUser(firebaseUser);
+          } else {
+            // Jika email salah, logout dan beri tahu user
+            await signOut(auth);
+            console.warn('Access denied for:', firebaseUser.email);
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        setUser(null);
+      } finally {
+        // KRUSIAL: Pastikan loading SELALU berhenti
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ user, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+</file>
+
+<file path="next.config.js">
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Konfigurasi Webpack untuk menangani package Node.js di Browser
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        crypto: false,
+        stream: false,
+        buffer: false,
+        fs: false,
+        path: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
+  },
+  
+  // Externalize package berat agar tidak dibundel oleh Next.js
+  experimental: {
+    serverComponentsExternalPackages: ['firebase-admin', 'googleapis', 'crypto-js'],
+  },
+};
+
+module.exports = nextConfig;
+</file>
+
+<file path="package.json">
+{
+  "name": "adhd-os",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "overrides": {
+    "undici": "5.28.4"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "axios": "^1.6.2",
+    "crypto-js": "^4.2.0",
+    "firebase": "^10.7.1",
+    "firebase-admin": "^12.0.0",
+    "googleapis": "^126.0.1",
+    "lucide-react": "^0.294.0",
+    "next": "14.0.4",
+    "papaparse": "^5.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.48.2",
+    "recharts": "^2.10.3"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.0.4",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6"
+  }
+}
+</file>
+
+</files>

@@ -13,13 +13,22 @@ export default function BrainPage() {
   const [newContent, setNewContent] = useState('');
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
+    useEffect(() => {
     if (!user) return;
-    getNotes(user.uid).then(data => {
-      setNotes(data);
-      setLoading(false);
-    });
+    const loadNotes = async () => {
+      try {
+        const data = await getNotes(user.uid);
+        setNotes(data);
+      } catch (err) {
+        console.error("Failed to load notes:", err);
+        setNotes([]); 
+      } finally {
+        setLoading(false); // PASTI berhenti loading
+      }
+    };
+    loadNotes();
   }, [user]);
+
 
   const handleSaveNote = async () => {
     if (!newContent.trim() || !user) return;
