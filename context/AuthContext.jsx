@@ -1,7 +1,7 @@
-// context/AuthContext.jsx
 'use client';
+
 import { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebaseClient';
 
 const AuthContext = createContext();
@@ -10,19 +10,33 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // FUNGSI LOGIN
+  const login = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Login failed. Pastikan menggunakan email yang diizinkan.");
+    }
+  };
+
+  // FUNGSI LOGOUT
+  const logout = async () => {
+    await signOut(auth);
+    setUser(null);
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          // Baca allowed email dari env, fallback ke email default
           const ALLOWED_EMAIL = process.env.NEXT_PUBLIC_ALLOWED_EMAIL || 'fadzaro10@gmail.com';
-          
           if (firebaseUser.email === ALLOWED_EMAIL) {
             setUser(firebaseUser);
           } else {
-            // Jika email salah, logout dan beri tahu user
             await signOut(auth);
-            console.warn('Access denied for:', firebaseUser.email);
+            alert('Access Denied: Aplikasi ini dikunci untuk pemilik tertentu.');
             setUser(null);
           }
         } else {
@@ -41,12 +55,13 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
+// EXPORT useAuth YANG BENAR
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

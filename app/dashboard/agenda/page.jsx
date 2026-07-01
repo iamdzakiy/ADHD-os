@@ -39,7 +39,7 @@ export default function AgendaPage() {
 
   const handleDragEnd = async (event) => {
     const { active, over } = event;
-    if (!over) return;
+    if (!over || !user) return;
     const task = tasks.find(t => t.id === active.id);
     const hour = parseInt(over.id.split('-')[1]);
 

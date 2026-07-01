@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import QuickAdd from './QuickAdd';
 
 const navItems = [
-  { name: 'Dashboard', icon: Home, path: '/' },
+  { name: 'Dashboard', icon: Home, path: '/dashboard' }, // FIX: Ubah dari '/' ke '/dashboard'
   { name: 'Finance', icon: Wallet, path: '/dashboard/finance' },
   { name: '2nd Brain', icon: Brain, path: '/dashboard/brain' },
   { name: 'Agenda', icon: Calendar, path: '/dashboard/agenda' },
